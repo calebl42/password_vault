@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/vault.dir/vault.cpp.o -o vault  _deps/ftxui-build/libftxui-component.a _deps/ftxui-build/libftxui-dom.a _deps/ftxui-build/libftxui-screen.a 

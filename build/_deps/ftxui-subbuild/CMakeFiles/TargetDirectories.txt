@@ -1,3 +1,0 @@
-/home/caleb/dev/vault/build/_deps/ftxui-subbuild/CMakeFiles/ftxui-populate.dir
-/home/caleb/dev/vault/build/_deps/ftxui-subbuild/CMakeFiles/edit_cache.dir
-/home/caleb/dev/vault/build/_deps/ftxui-subbuild/CMakeFiles/rebuild_cache.dir
