@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/sha.dir/primitives/sha.cpp.o -o sha  /usr/lib/x86_64-linux-gnu/libssl.so /usr/lib/x86_64-linux-gnu/libcrypto.so 
