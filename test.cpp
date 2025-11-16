@@ -3,8 +3,8 @@
 #include <string>
 
 int main() {
-    std::fstream hashes("hashes.txt");
-    hashes << "peepee\n";
-
+    std::fstream myfile;
+    myfile.open("test.txt", std::ios::out | std::ios::in);
+    myfile.close();
     return 0;
 }

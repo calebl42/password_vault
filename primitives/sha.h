@@ -37,7 +37,7 @@ uint32_t s_1(uint32_t x);
 std::string to_hexstring(uint32_t* H); 
 
 // returns the padding size of the message in bits
-uint64_t get_padding_size(std::string& message);
+uint64_t get_padding_size(std::string message);
 
 void pad256(std::string& message);
 
@@ -45,7 +45,7 @@ void pad256(std::string& message);
  * INPUT: utf-8 encoded message (max length allowed is 2^64-1 bits)
  * RETURNS: sha256 hash value as a hex character string
  */
-std::string sha256(std::string& message);
+std::string sha256(std::string message);
 
 //----------------------------------------------
 inline uint32_t Ch(uint32_t x, uint32_t y, uint32_t z) {
@@ -106,7 +106,7 @@ void pad256(std::string& message) {
 	message += static_cast<unsigned char>(original_size);
 }
 
-std::string sha256(std::string& message) {
+std::string sha256(std::string message) {
 	pad256(message);
 	uint32_t H[8] = {
 		0x6a09e667,
