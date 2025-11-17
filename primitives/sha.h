@@ -1,3 +1,6 @@
+#ifndef SHA_H
+#define SHA_H
+
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -184,3 +187,4 @@ std::string sha256(std::string message) {
 	return to_hexstring(H);
 }
 
+#endif

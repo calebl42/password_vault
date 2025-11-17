@@ -1,3 +1,6 @@
+#ifndef HMAC_H
+#define HMAC_H
+
 #include <string>
 #include <cstdint>
 #include <charconv>
@@ -44,3 +47,4 @@ std::string hmac_sha256(std::string k, std::string m) {
     return outer_hash;
 }
 
+#endif
