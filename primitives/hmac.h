@@ -1,31 +1,13 @@
 #ifndef HMAC_H
 #define HMAC_H
 
-#include <string>
-#include <cstdint>
-#include <charconv>
 #include "sha.h"
-
+#include "util.h"
 
 // Both k and m are to be utf-8 encoded strings.
 // preferred length of k is 32 bytes
 std::string hmac_sha256(std::string k, std::string m);
 
-std::string hex_to_utf8(std::string hex_string);
-
-
-std::string hex_to_utf8(std::string hex_string) {
-    if (hex_string.size() % 2 == 1) hex_string = "0" + hex_string;
-   
-    std::string utf8_string = "";
-    uint8_t utf_code;
-    for (int i = 0; i < hex_string.size(); i += 2) {
-        std::from_chars(hex_string.data() + i, hex_string.data() + i + 2, utf_code, 16);
-        utf8_string += static_cast<unsigned char>(utf_code);
-    }
-
-    return utf8_string;
-}
 
 std::string hmac_sha256(std::string k, std::string m) {
     while (k.size() < 64) {

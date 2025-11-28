@@ -1,19 +1,8 @@
 #ifndef PBKDF2_H
 #define PBKDF2_H
 
-#include <cstdint>
-#include <sstream>
-#include <iomanip>
 #include "hmac.h"
-
-std::string utf8_to_hex(std::string utf8_string) {
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    for (int i = 0; i < utf8_string.size(); i++) {
-        ss << std::setw(2) << static_cast<int>(static_cast<unsigned char>(utf8_string[i]));
-    }
-    return ss.str();
-}
+#include "util.h"
 
 typedef std::string (*prf)(std::string, std::string);
 prf current_prf;

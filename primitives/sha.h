@@ -20,8 +20,6 @@ static uint32_t K[64] = {
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-// logical functions
-//----------------------------------------------
 uint32_t Ch(uint32_t x, uint32_t y, uint32_t z);
 
 uint32_t Maj(uint32_t x, uint32_t y, uint32_t z);
@@ -36,21 +34,19 @@ uint32_t s_0(uint32_t x);
 
 uint32_t s_1(uint32_t x);
 
-// returns the array of hash values as a hex string, assuming H consists of 8 32-bit words
-std::string to_hexstring(uint32_t* H); 
-
 // returns the padding size of the message in bits
 uint64_t get_padding_size(std::string message);
 
 void pad256(std::string& message);
 
-/* 
- * INPUT: utf-8 encoded message (max length allowed is 2^64-1 bits)
- * RETURNS: sha256 hash value as a hex character string
- */
+// returns the array of hash values as a hex string, assuming H consists of 8 32-bit words
+std::string to_hexstring(uint32_t* H); 
+
+// message is utf-8 (max length of 2^64-1 bits)
+// returns sha256 hash value as a hex character string
 std::string sha256(std::string message);
 
-//----------------------------------------------
+
 inline uint32_t Ch(uint32_t x, uint32_t y, uint32_t z) {
     return (x & y) ^ (~x & z);     
 }
