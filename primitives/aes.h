@@ -27,8 +27,8 @@ uint8_t mult_gf(uint8_t a, uint8_t b) {
     int b_pos = 1;
     uint8_t res = 0;
 
-    // treat b as a sum of powers of 2
-    // distribute "a" onto each element
+    // treat b as sum of powers of 2
+    // distribute a onto each element of b
     for (int i = 0; i < 8; i++) { 
         if (b_copy & 1) {
             uint8_t cur_product = a;
@@ -96,6 +96,10 @@ void shift_rows(int state[4][4]) {
 
 void mix_columns(uint8_t state[4][4]) {
     for (int j = 0; j < 4; j++) {
+        state[0][j] = mult_gf(0x02, state[0][j]) ^ mult_gf(0x03, state[1][j]) ^ state[2][j] ^ state[3][j];
+        state[1][j] = state[0][j] ^ mult_gf(0x02, state[1][j]) ^ mult_gf(0x03, state[2][j]) ^ state[3][j];
+        state[1][j] = state[0][j] ^ state[1][j] ^ mult_gf(0x02, state[2][j]) ^ mult_gf(0x03, state[3][j]);
+        state[1][j] = mult_gf(0x02, state[0][j]) ^ state[1][j] ^ state[2][j] ^ mult_gf(0x02, state[3][j]); 
     }
 }
 
