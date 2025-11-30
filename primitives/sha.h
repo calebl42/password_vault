@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include <cmath>
-#include <bitset>
 #include <cstdint>
 #include <sstream>
 #include <iomanip>
