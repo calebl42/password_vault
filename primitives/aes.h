@@ -27,11 +27,32 @@ uint8_t sbox[256] = {
     0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 };
 
-// message must be 128 bits (utf-8), key must be a hex string
-// returns a hex-string ciphertext
+uint8_t sbox_inv[256] = {
+    0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
+    0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
+    0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
+    0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25,
+    0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92,
+    0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84,
+    0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06,
+    0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b,
+    0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73,
+    0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e,
+    0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b,
+    0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4,
+    0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f,
+    0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
+    0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
+    0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
+};
+
+// message must be 128-bit string (utf8), key must be a hex-string of length 128, 192, or 256 bits
+// returns encrypted ciphertext as a hex-string
 std::string aes_cipher(std::string key, std::string message);
 
-std::string aes_inv_cipher(std::string key, std::string ciphertext);
+// ciphertext must be a 128-bit hex-string, key must be a hex-string of length 128, 192, or 256 bits
+// returns the decrypted plaintext in utf-8
+std::string aes_cipher_inv(std::string key, std::string ciphertext);
 
 // polynomial mutliplication in GF(2^8)
 // we reduce modulo x^8 + x^4 + x^3 + x + 1
@@ -39,18 +60,24 @@ uint8_t mult_gf(uint8_t a, uint8_t b);
 
 void sub_bytes(uint8_t state[4][4]);
 
+void sub_bytes_inv(uint8_t state[4][4]);
+
 uint32_t sub_word(uint32_t word);
 
 uint32_t rot_word(uint32_t word);
 
 void shift_rows(uint8_t state[4][4]);
 
+void shift_rows_inv(uint8_t state[4][4]);
+
 void mix_columns(uint8_t state[4][4]);
+
+void mix_columns_inv(uint8_t state[4][4]);
 
 void add_round_key(uint8_t state[4][4], uint32_t* round_keys, int round);
 
 // returns the round keys as an array of 4*(num_rounds + 1) words 
-// key must be a hex string
+// key must be a hex string of length 128, 192, or 256 bits
 uint32_t* key_expansion(std::string key);
 
 
@@ -80,6 +107,14 @@ void sub_bytes(uint8_t state[4][4]) {
     }
 }
 
+void sub_bytes_inv(uint8_t state[4][4]) {
+    for (int i = 0; i < 4; i++) {
+        for (int j =0; j < 4; j++) {
+            state[i][j] = sbox_inv[state[i][j]];
+        }
+    }
+}
+
 void shift_rows(uint8_t state[4][4]) {
     uint8_t temp1, temp2;
     temp1 = state[1][0];
@@ -100,6 +135,28 @@ void shift_rows(uint8_t state[4][4]) {
     state[3][2] = state[3][1];
     state[3][1] = state[3][0];
     state[3][0] = temp1;
+}
+
+void shift_rows_inv(uint8_t state[4][4]) {
+    uint8_t temp1, temp2; 
+    temp1 = state[1][3];
+    state[1][3] = state[1][2];
+    state[1][2] = state[1][1];
+    state[1][1] = state[1][0];
+    state[1][0] = temp1;
+
+    temp1 = state[2][2];
+    temp2 = state[2][3];
+    state[2][2] = state[2][0];
+    state[2][3] = state[2][1];
+    state[2][0] = temp1;
+    state[2][1] = temp2;
+
+    temp1 = state[3][0];
+    state[3][0] = state[3][1];
+    state[3][1] = state[3][2];
+    state[3][2] = state[3][3];
+    state[3][3] = temp1;
 }
 
 void mix_columns(uint8_t state[4][4]) {
@@ -125,6 +182,19 @@ uint32_t sub_word(uint32_t word) {
     );
 }
 
+void mix_columns_inv(uint8_t state[4][4]) {
+    for (int j = 0; j < 4; j++) {
+        uint8_t next_state_0j = mult_gf(0x0e, state[0][j]) ^ mult_gf(0x0b, state[1][j]) ^ mult_gf(0x0d, state[2][j]) ^ mult_gf(0x09, state[3][j]);
+        uint8_t next_state_1j = mult_gf(0x09, state[0][j]) ^ mult_gf(0x0e, state[1][j]) ^ mult_gf(0x0b, state[2][j]) ^ mult_gf(0x0d, state[3][j]);
+        uint8_t next_state_2j = mult_gf(0x0d, state[0][j]) ^ mult_gf(0x09, state[1][j]) ^ mult_gf(0x0e, state[2][j]) ^ mult_gf(0x0b, state[3][j]);
+        uint8_t next_state_3j = mult_gf(0x0b, state[0][j]) ^ mult_gf(0x0d, state[1][j]) ^ mult_gf(0x09, state[2][j]) ^ mult_gf(0x0e, state[3][j]);
+        
+        state[0][j] = next_state_0j;
+        state[1][j] = next_state_1j;
+        state[2][j] = next_state_2j;
+        state[3][j] = next_state_3j;
+    }
+}
 uint32_t rot_word(uint32_t word) {
     return (
         ((word & 0x00ff0000) << 8) | 
@@ -199,6 +269,9 @@ void print_state(uint8_t state[4][4]) {
 }
 
 std::string aes_cipher(std::string key, std::string message) {
+    if (message.size() != 16) {
+        exit(1); 
+    }
     uint8_t state[4][4];
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -219,8 +292,7 @@ std::string aes_cipher(std::string key, std::string message) {
             num_rounds = 14;
             break;
         default:
-            num_rounds = 0;
-            break;
+            exit(1);
     }
     add_round_key(state, round_keys, 0);
     
@@ -235,7 +307,7 @@ std::string aes_cipher(std::string key, std::string message) {
         //print_state(state);
         add_round_key(state, round_keys, round);
     }
-    // std::cout << "start of round: 10" << '\n';
+    // std::cout << "start of final round:" << '\n';
     // print_state(state);
     sub_bytes(state);
     // print_state(state);
@@ -252,6 +324,64 @@ std::string aes_cipher(std::string key, std::string message) {
     }
 
     return utf8_to_hex(state_utf8);
+}
+
+std::string aes_cipher_inv(std::string key, std::string ciphertext) {       
+    uint8_t state[4][4];
+    ciphertext = hex_to_utf8(ciphertext);
+    if (ciphertext.size() != 16) exit(1); 
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            state[i][j] = static_cast<uint8_t>(ciphertext[i + 4*j]);
+        }
+    }
+    // print_state(state);
+    uint32_t* round_keys = key_expansion(key);
+    int num_rounds; 
+    switch(key.size() * 4) {
+        case 128:
+            num_rounds = 10;
+            break;
+        case 192:
+            num_rounds = 12; 
+            break;
+        case 256:
+            num_rounds = 14;
+            break;
+        default:
+            exit(1);
+    }
+    add_round_key(state, round_keys, num_rounds);
+    
+    for (int round = num_rounds-1; round >= 1; round--) {
+        // std::cout << "start of round: " << round << '\n'; 
+        //print_state(state);
+        shift_rows_inv(state); 
+        // print_state(state);
+        sub_bytes_inv(state); 
+        //print_state(state); 
+        add_round_key(state, round_keys, round);
+        //print_state(state); 
+        mix_columns_inv(state); 
+        //print_state(state);
+    }
+    // std::cout << "start of final round:" << '\n';
+    // print_state(state);
+    shift_rows_inv(state); 
+    // print_state(state);
+    sub_bytes_inv(state);
+    // print_state(state);
+    add_round_key(state, round_keys, 0);
+    // print_state(state);
+    std::string state_utf8 = "";
+
+    for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < 4; i++) {
+            state_utf8 += static_cast<unsigned char>(state[i][j]);
+        }
+    }
+
+    return state_utf8;
 }
 
 #endif

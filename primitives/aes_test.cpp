@@ -1,9 +1,12 @@
 #include "aes.h"
 #include <iostream>
+#include <ctime>
 
 int main() {
+    srand(time(NULL));
+
     uint8_t tester[4][4] = {{1,2,3,4}, {1,2,3,4}, {1,2,3,4}, {1,2,3,4}};
-    shift_rows(tester);
+    shift_rows_inv(tester);
     std::cout << "testing shift_rows\n";
     for (int i = 0; i < 4; i++) {
        for (int j = 0; j < 4; j++) {
@@ -34,9 +37,29 @@ int main() {
         std::cout << std::dec << i << ": " << std::hex << std::setw(8) << keys[i] << '\n';
     }
 
-    std::cout << "\ntesting aes cipher\n";  
-    std::cout << aes_cipher("2b7e151628aed2a6abf7158809cf4f3c", hex_to_utf8("3243f6a8885a308d313198a2e0370734")) << '\n';
-    std::cout << aes_cipher("c7b29cd399258d694a50a2e89ec6055ce5487f0706fcb86a5bb7466e824bc264", hex_to_utf8("3243f6a8885a308d313198a2e0370734")) << '\n';
-    std::cout << (static_cast<uint8_t>(0xd4) ^ mult_gf(0x02, 0xbf) ^ mult_gf(0x03, 0x5d) ^ static_cast<uint8_t>(0x30)) << '\n';
+    for (int i = 0; i < 10; i++) {
+        std::stringstream key;
+        std::stringstream message;
+
+        for (int i = 0; i < 64; i++) {
+            key << std::hex << (rand() % 16);
+        }
+        
+        for (int i = 0; i < 32; i++) {
+            message << std::hex << (rand() % 16);
+        }
+
+        std::cout << "encrypting plaintext " << message.str() << " using 256-bit key: " << key.str() << "\n";
+        std::string ciphertext = aes_cipher(key.str(), hex_to_utf8(message.str()));
+        std::cout << "resulting ciphertext: " << ciphertext << "\n"; 
+        std::string decrypted = utf8_to_hex(aes_cipher_inv(key.str(), ciphertext));
+        std::cout << "decrypted plaintext: " << decrypted << "\n\n";
+        if (message.str() != decrypted) {
+            std::cout << "TEST FAILED, DECRYPTED MESSAGE NOT EQUIVAL TO PLAINTEXT.";
+            return -1;
+        }
+    } 
+
+    std::cout << "Tests Passed!\n";
     return 0;
 }
