@@ -49,16 +49,27 @@ int main() {
             message << std::hex << (rand() % 16);
         }
 
-        std::cout << "encrypting plaintext " << message.str() << " using 256-bit key: " << key.str() << "\n";
+        std::cout << "encrypting single block " << message.str() << " using 256-bit key: " << key.str() << "\n";
         std::string ciphertext = aes_cipher(key.str(), hex_to_utf8(message.str()));
         std::cout << "resulting ciphertext: " << ciphertext << "\n"; 
         std::string decrypted = utf8_to_hex(aes_cipher_inv(key.str(), ciphertext));
-        std::cout << "decrypted plaintext: " << decrypted << "\n\n";
+        std::cout << "decrypted block: " << decrypted << "\n\n";
         if (message.str() != decrypted) {
             std::cout << "TEST FAILED, DECRYPTED MESSAGE NOT EQUIVAL TO PLAINTEXT.";
             return -1;
         }
-    } 
+    }   
+
+    std::string long_plaintext = "I love hamsters alot, they are really cute. I wish I was a little orange hamster in my burrow, eating apples and peanuts, sleeping all day. Oh how peaceful life would be!";
+    std::string key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
+    std::string IV = "AAAAAAAAAAAAAAAA";
+    std::cout << "\ntesting encrypting long plaintext with counter mode\n";
+    std::cout << "plaintext: " << long_plaintext << '\n';
+    std::cout << "key: " << key << '\n';
+    std::cout << "IV: " << IV << '\n';
+    std::string ciphertext = counter_mode_encrypt(key, long_plaintext, IV);
+    std::cout << "resulting ciphertext: " << ciphertext << '\n';
+    std::cout << "decrypted into plaintext: " << counter_mode_decrypt(key, ciphertext, IV) << '\n';
 
     std::cout << "Tests Passed!\n";
     return 0;
