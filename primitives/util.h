@@ -18,7 +18,7 @@ std::string hex_to_utf8(std::string hex_string) {
    
     std::string utf8_string = "";
     uint8_t utf_code;
-    for (int i = 0; i < hex_string.size(); i += 2) {
+    for (unsigned long i = 0; i < hex_string.size(); i += 2) {
         std::from_chars(hex_string.data() + i, hex_string.data() + i + 2, utf_code, 16);
         utf8_string += static_cast<unsigned char>(utf_code);
     }
@@ -30,7 +30,7 @@ std::string hex_to_utf8(std::string hex_string) {
 std::string utf8_to_hex(std::string utf8_string) {
     std::stringstream ss;
     ss << std::hex << std::setfill('0');
-    for (int i = 0; i < utf8_string.size(); i++) {
+    for (unsigned long i = 0; i < utf8_string.size(); i++) {
         ss << std::setw(2) << static_cast<int>(static_cast<unsigned char>(utf8_string[i]));
     }
     return ss.str();

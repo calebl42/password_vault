@@ -64,7 +64,7 @@ std::string counter_mode_encrypt(std::string key, std::string message, std::stri
 // ciphertext is a variable length hex-string
 // iv must be the same 16 byte utf8 string used to encrypt the ciphertext
 // returns the decrypted plaintext in utf8
-std::string counter_mode_decrypt(std::string key, std::string ciphertext, std::string);
+std::string counter_mode_decrypt(std::string key, std::string ciphertext, std::string iv);
 
 // polynomial mutliplication in GF(2^8)
 // we reduce modulo x^8 + x^4 + x^3 + x + 1

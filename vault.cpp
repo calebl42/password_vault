@@ -4,11 +4,11 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-#include <climits>
 #include <fstream>
 #include <string>
 
-#include "sha.h"
+#include "primitives/pbkdf2.h"
+#include "primitives/aes.h"
 #include "ftxui/component/captured_mouse.hpp"
 #include "ftxui/component/component.hpp"   
 #include "ftxui/component/component_base.hpp"  
@@ -18,70 +18,80 @@
 
 int main() { 
     using namespace ftxui;
+
+    std::ofstream file_creator;
+    file_creator.open("/home/caleb/documents/crypt", std::ios::app);
+    file_creator.close();
     
-    auto screen = ScreenInteractive::TerminalOutput();
-    std::fstream hashes("hashes.txt");
-    std::string master_password_hash = "";
+    std::fstream crypt;
+    crypt.open("/home/caleb/documents/crypt", std::ios::in | std::ios::out | std::ios::app);
+    std::string auth_test;
     std::string password_attempt;
+       
+    auto screen = ScreenInteractive::TerminalOutput();
     InputOption password_option;
     password_option.password = true;
     password_option.multiline = false;
     Component input_password = Input(&password_attempt, password_option);
+
     bool logged_in = false;
     bool attempt_failed = false;
-
+    
     auto input_password_component = Container::Vertical({
         input_password
     });
-         
+        
     auto renderer = Renderer(input_password_component, [&] { 
-        hashes.clear(); 
-        hashes.seekg(0, std::ios::beg);
-        if (!std::getline(hashes, master_password_hash)) {
+        crypt.clear(); 
+        crypt.seekg(0, std::ios::beg);
+        if (!std::getline(crypt, auth_test)) {
             return vbox({
-                hbox(
-                    text("Set the vault's master password: "),
-                    input_password->Render()
-                )
+                text("It looks like you're logging in for the first time!") | bold,
+                text("Set your vault's Master Password: "),
+                input_password->Render(),
             }) | border;
-        }
-
-        if (logged_in) {
-            return text("logged in bruh");
+        } else if (!logged_in) {
+            return vbox({
+                text(attempt_failed ? "Wrong password, try again:" : "Master Password: "),
+                input_password->Render(),
+            }) | border;
         } else {
-            return vbox({
-                hbox(
-                    text(attempt_failed ? "Wrong password, try again:" : "Password: "),
-                    input_password->Render()
-                )
-            }) | border;
+            return text("You're in!") | bold;
         }
     });
-
+    
     renderer |= CatchEvent([&](Event event) {
-        hashes.clear();
-        hashes.seekg(0, std::ios::beg);
-        if (event == Event::Return) {
-            if (!std::getline(hashes, master_password_hash)) { 
-                hashes << sha256(password_attempt) << '\n'; 
-                master_password_hash = sha256(password_attempt);
+        crypt.clear();
+        crypt.seekg(0, std::ios::beg);
+        std::string verification_message = "This is the verification message, good luck trying to crack my passwords!";
+        if (event == Event::Return && !logged_in) {
+            if (!std::getline(crypt, auth_test)) {
+                crypt.clear();
+                crypt.seekg(0, std::ios::beg);
+                std::string true_password = pbkdf2(&hmac_sha256, password_attempt, "testing!", 10000, 256);
+                std::string verification_ciphertext = counter_mode_encrypt(true_password, verification_message, "AAAAAAAAAAAAAAAA"); 
+                crypt << verification_ciphertext << '\n';
                 password_attempt.clear();
-            } else if (sha256(password_attempt) != master_password_hash) {
-                password_attempt.clear();
-                attempt_failed = true;
-                return true;
-            } else {
                 logged_in = true;
-                return true;
+            } else {
+                std::string derived = pbkdf2(&hmac_sha256, password_attempt, "testing!", 10000, 256);
+                if (counter_mode_decrypt(derived, auth_test, "AAAAAAAAAAAAAAAA") == verification_message) {
+                    password_attempt.clear();
+                    logged_in = true; 
+                } else {
+                    password_attempt.clear();
+                    attempt_failed = true;
+                }
             }
+            return true;
         } else if (event == Event::CtrlD) {
             screen.ExitLoopClosure()();
             return true;
         }
-
         return false;
     });
- 
+
     screen.Loop(renderer);
-    hashes.close();
+    crypt.close();
+    return 0;
 }
