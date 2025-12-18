@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <sstream>
 #include <iomanip>
+#include <vector>
+#include "util.h"
 
 static uint32_t K[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -34,17 +36,18 @@ uint32_t s_0(uint32_t x);
 uint32_t s_1(uint32_t x);
 
 // returns the padding size of the message in bits
-uint64_t get_padding_size(std::string message);
+uint64_t get_padding_size(std::vector<uint8_t> message);
 
-void pad256(std::string& message);
+void pad256(std::vector<uint8_t>& message);
 
 // returns the array of hash values as a hex string, assuming H consists of 8 32-bit words
 std::string to_hexstring(uint32_t* H); 
 
-// message is utf-8 (max length of 2^64-1 bits)
+// message has max length of 2^64-1 bits
 // returns sha256 hash value as a hex character string
+std::string sha256(std::vector<uint8_t> message);
+// same as above but takes in a hex-string
 std::string sha256(std::string message);
-
 
 inline uint32_t Ch(uint32_t x, uint32_t y, uint32_t z) {
     return (x & y) ^ (~x & z);     
@@ -83,28 +86,28 @@ std::string to_hexstring(uint32_t* H) {
 	return ss.str();	
 }
 
-void pad256(std::string& message) {
+void pad256(std::vector<uint8_t>& message) {
     const uint64_t original_size = message.size() * 8; 
     uint64_t k = 0;
     while ((original_size + 1 + k) % 512 != 448) ++k;
 	const uint64_t padding_size = 1 + k + 64;
 	
-	message += static_cast<unsigned char>(0x80);
+	message.push_back(0x80);
 	for (uint8_t i = 1; i < (padding_size - 64) >> 3; ++i) {
-		message += static_cast<unsigned char>(0);
+		message.push_back(0);
 	}
 	
-	message += static_cast<unsigned char>(original_size >> 56);
-	message += static_cast<unsigned char>(original_size >> 48);
-	message += static_cast<unsigned char>(original_size >> 40);
-	message += static_cast<unsigned char>(original_size >> 32);
-	message += static_cast<unsigned char>(original_size >> 24);
-	message += static_cast<unsigned char>(original_size >> 16);
-	message += static_cast<unsigned char>(original_size >> 8);
-	message += static_cast<unsigned char>(original_size);
+	message.push_back(static_cast<uint8_t>(original_size >> 56));
+	message.push_back(static_cast<uint8_t>(original_size >> 48));
+	message.push_back(static_cast<uint8_t>(original_size >> 40));
+	message.push_back(static_cast<uint8_t>(original_size >> 32));
+	message.push_back(static_cast<uint8_t>(original_size >> 24));
+	message.push_back(static_cast<uint8_t>(original_size >> 16));
+	message.push_back(static_cast<uint8_t>(original_size >> 8));
+	message.push_back(static_cast<uint8_t>(original_size));
 }
 
-std::string sha256(std::string message) {
+std::string sha256(std::vector<uint8_t> message) {
 	pad256(message);
 	uint32_t H[8] = {
 		0x6a09e667,
@@ -134,13 +137,13 @@ std::string sha256(std::string message) {
         uint32_t W[64];
         for (uint8_t j = 0; j < 16; ++j) {	
 			W[j] = 0;
-			W[j] = W[j] | static_cast<unsigned char>(message[message_index]);
+			W[j] = W[j] | message[message_index];
 			W[j] <<= 8;
-			W[j] = W[j] | static_cast<unsigned char>(message[message_index+1]);
+			W[j] = W[j] | message[message_index+1];
 			W[j] <<= 8;
-			W[j] = W[j] | static_cast<unsigned char>(message[message_index+2]);
+			W[j] = W[j] | message[message_index+2];
 			W[j] <<= 8;
-			W[j] = W[j] | static_cast<unsigned char>(message[message_index+3]);
+			W[j] = W[j] | message[message_index+3];
            	message_index += 4;
         }
         for (uint8_t j = 16; j < 64; ++j) {
@@ -180,6 +183,10 @@ std::string sha256(std::string message) {
     }
 	
 	return to_hexstring(H);
+}
+
+std::string sha256(std::string message) {
+    return sha256(vectorize_hex(message));
 }
 
 #endif
