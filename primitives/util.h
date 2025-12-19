@@ -23,10 +23,17 @@ std::string vector_to_hex(std::vector<uint8_t> v);
 
 
 std::string hex_to_utf8(std::string hex_string) {
+    for (char& c : hex_string) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            std::cerr << "Trying to convert invalid hex string to utf8: " << hex_string << '\n';
+            exit(1);
+        }
+    }
+
     if (hex_string.size() % 2 == 1) hex_string = "0" + hex_string;
    
     std::string utf8_string = "";
-    for (int i = 0; i < hex_string.size(); i += 2) {
+    for (unsigned long i = 0; i < hex_string.size(); i += 2) {
         utf8_string += static_cast<unsigned char>(stoi(hex_string.substr(i, 2), nullptr, 16));
     }
 
@@ -35,11 +42,13 @@ std::string hex_to_utf8(std::string hex_string) {
 
 
 std::string utf8_to_hex(std::string utf8_string) {
+
     std::stringstream ss;
     ss << std::hex << std::setfill('0');
     for (unsigned long i = 0; i < utf8_string.size(); i++) {
-        ss << std::setw(2) << static_cast<int>(static_cast<unsigned char>(utf8_string[i]));
+        ss << std::setw(2) << static_cast<unsigned int>(utf8_string[i]);
     }
+
     return ss.str();
 }
 
@@ -60,6 +69,12 @@ std::vector<std::string> split(std::string s, char delim) {
 }
 
 std::string increment_hex_string(std::string s) {
+    for (char& c : s) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            std::cerr << "Trying to increment invalid hex string: " << s << '\n';
+            exit(1);
+        }
+    }
     bool overflow = true; 
     int pos = s.size()-1;
     while (overflow && pos >= 0) {
@@ -86,10 +101,16 @@ std::vector<uint8_t> vectorize(std::string s) {
 }
 
 std::vector<uint8_t> vectorize_hex(std::string s) {
+    for (char& c : s) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            std::cerr << "Trying to vectorize invalid hex string: " << s << '\n';
+            exit(1);
+        }
+    }
     if (s.size() % 2 == 1) s = '0' + s;
     
     std::vector<uint8_t> v;
-    for (int i = 0; i < s.size(); i += 2) {
+    for (unsigned long i = 0; i < s.size(); i += 2) {
         v.push_back(static_cast<uint8_t>(stoi(s.substr(i, 2), nullptr, 16)));
     } 
     return v;

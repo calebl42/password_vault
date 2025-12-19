@@ -416,8 +416,8 @@ std::string counter_mode_encrypt(std::string key, std::string message, std::stri
    
     for (int i = 0; i < n/16; i++) {
         pad = vectorize_hex(aes_cipher(key, counter)); 
-        for (int j = i*16; j < i*16 + 16; j++) {
-            ciphertext << std::setw(2) << static_cast<unsigned int>(pad[j] ^ message_vec[j]);
+        for (int j = 0; j < 16; j++) {
+            ciphertext << std::setw(2) << static_cast<unsigned int>(pad[j] ^ message_vec[i*16 + j]);
         }
         counter = increment_hex_string(counter);
     }
@@ -439,8 +439,8 @@ std::string counter_mode_decrypt(std::string key, std::string ciphertext, std::s
     
     for (int i = 0; i < n/16; i++) {
         pad = vectorize_hex(aes_cipher(key, counter)); 
-        for (int j = i*16; j < i*16+16; j++) {
-            plaintext << std::setw(2) << static_cast<unsigned int>(pad[j] ^ ciphertext_vec[j]);
+        for (int j = 0; j < 16; j++) {
+            plaintext << std::setw(2) << static_cast<unsigned int>(pad[j] ^ ciphertext_vec[i*16 + j]);
         }
         counter = increment_hex_string(counter);
     }

@@ -60,8 +60,10 @@ int main() {
    //     }
    // }   
 
-    std::string long_plaintext = "I love hamsters alot, they are really cute. I wish I was a little orange hamster in my burrow, eating apples and peanuts, sleeping all day. Oh how peaceful life would be!";
-    std::string key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
+    //std::string long_plaintext = "I love hamsters alot, they are really cute. I wish I was a little orange hamster in my burrow, eating apples and peanuts, sleeping all day. Oh how peaceful life would be!";
+    std::string long_plaintext = "This is the verification message, good luck trying to crack my passwords!"; 
+    //std::string key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4";
+    std::string key = "a3dc034d1776e30bdfc00978378b3e2d9b97127bc5aedf5196410aa4a28ed719"; 
     std::string IV = "00000000000000000000000000000000";
     std::cout << "\ntesting encrypting long plaintext with counter mode\n";
     std::cout << "plaintext: " << long_plaintext << '\n';

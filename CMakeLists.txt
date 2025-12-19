@@ -17,7 +17,6 @@ include_directories(primitives)
 
 target_link_libraries(vault
     PRIVATE
-        # Chose a submodule
         ftxui::component
         ftxui::dom
         ftxui::screen
@@ -25,6 +24,6 @@ target_link_libraries(vault
 
 target_compile_options(vault 
     PRIVATE 
-        -Wall -Werror
+        -g -Wall -Werror
 )
 
