@@ -1,6 +1,7 @@
 #ifndef HMAC_H
 #define HMAC_H
 
+#include <cstdlib>
 #include "sha.h"
 #include "util.h"
 
@@ -11,6 +12,20 @@ std::string hmac_sha256(std::string k, std::string m);
 
 
 std::string hmac_sha256(std::string k, std::string m) {
+    for (char& c : k) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring key used in hmac_sha256: " << k << '\n';
+            exit(1);
+        }
+    }
+    for (char& c : m) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring message used in hmac_sha256: " << m << '\n';
+            exit(1);
+        }
+    }
     std::vector<uint8_t> k_vec = vectorize_hex(k);
     std::vector<uint8_t> m_vec = vectorize_hex(m);
 

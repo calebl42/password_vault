@@ -1,6 +1,7 @@
 #ifndef AES_H
 #define AES_H
 
+#include <cstdlib>
 #include "util.h"
 
 uint32_t Rcon[10] = {
@@ -281,6 +282,21 @@ void print_state(uint8_t state[4][4]) {
 }
 
 std::string aes_cipher(std::string key, std::string message) {
+    for (char& c : key) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring key used in aes: " << key << '\n';
+            exit(1);
+        }
+    }
+    for (char& c : message) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! trying to encrypt non hex-string, single-block message in aes: " << message << '\n';
+            exit(1);
+        }
+    }
+
     std::vector<uint8_t> message_vec = vectorize_hex(message);
     if (message_vec.size() != 16) {
         std::cerr << "incorrect message length of: " << message_vec.size() << "bytes \n";
@@ -344,6 +360,22 @@ std::string aes_cipher(std::string key, std::string message) {
 }
 
 std::string aes_cipher_inv(std::string key, std::string ciphertext) {       
+    for (char& c : key) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring key used in aes_inv: " << key << '\n';
+            exit(1);
+        }
+    }
+
+    for (char& c : ciphertext) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring ciphertext used in aes_inv: " << ciphertext << '\n';
+            exit(1);
+        }
+    }
+
     std::vector<uint8_t> ciphertext_vec = vectorize_hex(ciphertext);
     if (ciphertext_vec.size() != 16) {
         std::cerr << "incorrect ciphertext length of: " << ciphertext_vec.size() << "bytes \n";
@@ -408,6 +440,28 @@ std::string aes_cipher_inv(std::string key, std::string ciphertext) {
 }
 
 std::string counter_mode_encrypt(std::string key, std::string message, std::string counter) {
+    for (char& c : key) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring key used in counter_mode_encrypt: " << key << '\n';
+            exit(1);
+        }
+    }
+    for (char& c : message) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring message used in counter_mode_encrypt: " << message << '\n';
+            exit(1);
+        }
+    }
+    for (char& c : counter) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring counter used in counter_mode_encrypt: " << counter << '\n';
+            exit(1);
+        }
+    }
+
     std::vector<uint8_t> message_vec = vectorize_hex(message);
     int n = message_vec.size();
     std::stringstream ciphertext;
@@ -431,6 +485,28 @@ std::string counter_mode_encrypt(std::string key, std::string message, std::stri
 }
 
 std::string counter_mode_decrypt(std::string key, std::string ciphertext, std::string counter) { 
+    for (char& c : key) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring key used in counter_mode_decrypt: " << key << '\n';
+            exit(1);
+        }
+    }
+    for (char& c : ciphertext) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring ciphertext used in counter_mode_decrypt: " << ciphertext << '\n';
+            exit(1);
+        }
+    }
+    for (char& c : counter) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring counter used in counter_mode_decrypt: " << counter << '\n';
+            exit(1);
+        }
+    }
+
     std::vector<uint8_t> ciphertext_vec = vectorize_hex(ciphertext); 
     int n = ciphertext_vec.size();
     std::stringstream plaintext;

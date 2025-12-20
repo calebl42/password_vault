@@ -1,6 +1,7 @@
 #ifndef PBKDF2_H
 #define PBKDF2_H
 
+#include <cstdlib>
 #include "hmac.h"
 #include "util.h"
 
@@ -9,6 +10,21 @@
 // password and salt must be hex-strings
 // returns hex-string key of length dkLen
 std::string pbkdf2(std::string password, std::string salt, uint32_t c, uint32_t dkLen) {
+    for (char& c : password) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring password used in pbkdf2: " << password << '\n';
+            exit(1);
+        }
+    }
+    for (char& c : salt) {
+        if (c < 48 || (c > 57 && c < 65) || (c > 70 && c < 97) || c > 102) {
+            system("clear");
+            std::cerr << "Error! Non-hexstring salt used in pbkdf2: " << salt << '\n';
+            exit(1);
+        }
+    }
+
     uint32_t hLen = hmac_sha256(utf8_to_hex("test key"), utf8_to_hex("test message")).size() * 4;
     
     std::vector<uint8_t> dk;

@@ -19,38 +19,57 @@
 #include "ftxui/dom/node.hpp"
 #include "ftxui/screen/color.hpp"
 
-class entry {
-    std::string app_name;
-    std::string username;
-    std::string password;
+class Entry {
+    private:
+        std::string counter;
+        std::string app_name;
+        std::string username;
+        std::string password;
+    
+    public:
+        Entry(std::string c, std::string a, std::string u, std::string p) : counter(c), app_name(a), username(u), password(p) {};
+
+        std::string get_counter() {return counter;}
+        std::string get_app_name() {return app_name;}
+        std::string get_username() {return username;}
+        std::string get_password() {return password;}
+        std::string get_next_counter() {
+            unsigned long long num_blocks = std::ceil(app_name.size()/16.0) + std::ceil(username.size()/16.0) + std::ceil(password.size()/16.0);
+            std::string next = counter;
+            for (unsigned long long i = 0; i < num_blocks; i++) {
+                next = increment_hex_string(next);    
+            }
+            return next;
+        }
 };
 
 int main() { 
     using namespace ftxui;
     auto screen = ScreenInteractive::TerminalOutput();
+    std::vector<Entry*> entries;
+    bool entries_fetched = false;
 
-    std::ofstream file_creator("/home/caleb/documents/crypt", std::ios::app);
-    file_creator.close(); 
-    std::fstream crypt;
-    crypt.open("/home/caleb/documents/crypt", std::ios::in | std::ios::out | std::ios::app);
-
+    std::ofstream crypt_write("/home/caleb/documents/crypt", std::ios::app);
+    crypt_write.close(); 
+    std::ifstream crypt_read("/home/caleb/documents/crypt");
+    
     bool attempt_failed = false;    
     std::string first_line; 
-    int selector = !std::getline(crypt, first_line) ? 0 : 1;   
+    int selector = !std::getline(crypt_read, first_line) ? 0 : 1;   
     std::string verification_message = "This is the verification message, good luck trying to crack my passwords!";
     std::string counter_start = "00000000000000000000000000000000";
-    std::string true_password = "";
+    std::string master_key = "";
 
     std::string init_password;
     InputOption init_option;
     init_option.multiline = false;
     init_option.on_enter = [&] {
-        crypt.clear();
-        crypt.seekg(0, std::ios::beg);        
-        true_password = pbkdf2(utf8_to_hex(init_password), utf8_to_hex("essalado"), 10000, 256);
-        std::string verification_ciphertext = counter_mode_encrypt(true_password, utf8_to_hex(verification_message), counter_start); 
-        crypt << counter_start << ':' << verification_ciphertext << '\n';
+        crypt_write.open("/home/caleb/documents/crypt");
+        master_key = pbkdf2(utf8_to_hex(init_password), utf8_to_hex("essalado"), 10000, 256);
+        std::string verification_ciphertext = counter_mode_encrypt(master_key, utf8_to_hex(verification_message), counter_start); 
+        crypt_write << counter_start << ':' << verification_ciphertext << '\n';
         selector = 2;
+        crypt_write.close();
     };
     Component init_input = Input(&init_password, init_option); 
 
@@ -59,13 +78,13 @@ int main() {
     login_option.password = true;
     login_option.multiline = false;
     login_option.on_enter = [&] {
-        true_password = pbkdf2(utf8_to_hex(login_attempt), utf8_to_hex("essalado"), 10000, 256); 
+        master_key = pbkdf2(utf8_to_hex(login_attempt), utf8_to_hex("essalado"), 10000, 256); 
         std::vector<std::string> first_line_split = split(first_line, ':');
         if (first_line_split.size() != 2) {
             std::cerr << "couldn't split first line of crypt file into 2 chunks\n";
             exit(1);
         }
-        if (counter_mode_decrypt(true_password, first_line_split[1], first_line_split[0]) == utf8_to_hex(verification_message)) {
+        if (counter_mode_decrypt(master_key, first_line_split[1], first_line_split[0]) == utf8_to_hex(verification_message)) {
             selector = 2;
         } else {
             attempt_failed = true;
@@ -104,25 +123,52 @@ int main() {
     });
 
     Component entry_submit = Button("submit", [&] {
-       // crypt.clear();
-       // crypt.seekg(0, std::ios::end);
-       // std::string lastline;
-       // while (getline(crypt, lastline));
-       // std::vector<std::string> lastline_split = split(lastline, ':');
-       // std::string latest_counter = lastline_split[0];
+        std::string latest_counter;
+        if (entries.empty()) { 
+            crypt_read.clear();
+            crypt_read.seekg(0, std::ios::beg);
+            std::string line;
+            getline(crypt_read, line);
+            latest_counter = increment_hex_string(split(line, ':')[0]);
+        } else {
+            latest_counter = (entries.back())->get_next_counter();
+        }
 
-       // crypt.clear();
-       // crypt.seekg(0, std::ios::end);
-       // for (int i = 0; i < ceil(lastline_split[1].size()/16.0)+1; i++) latest_counter = increment_hex_string(latest_counter); 
-       // crypt << latest_counter << ':' << counter_mode_encrypt(true_password, utf8_to_hex(new_app), latest_counter) << '\n';
-       // for (int i = 0; i < ceil(new_app.size()/16.0)+1; i++) latest_counter = increment_hex_string(latest_counter);
-       // crypt << latest_counter << ':' << counter_mode_encrypt(true_password, utf8_to_hex(new_username), latest_counter) << '\n';
-       // for (int i = 0; i < ceil(new_username.size()/16.0)+1; i++) latest_counter = increment_hex_string(latest_counter);
-       // crypt << latest_counter << ':' << counter_mode_encrypt(true_password, utf8_to_hex(new_password), latest_counter) << '\n';
-        
+        entries.push_back(new Entry(latest_counter, new_app, new_username, new_password)); 
         new_app.clear();
         new_username.clear();
         new_password.clear();        
+    });
+    
+    Component entries_display = Renderer([&] {
+        if (!entries_fetched) {
+            entries_fetched = true; 
+            crypt_read.clear();
+            crypt_read.seekg(0, std::ios::beg);
+            std::string line;
+            getline(crypt_read, line); //consume and skip the verification ciphertext
+            while (getline(crypt_read, line)) {
+                std::string app_name = hex_to_utf8(counter_mode_decrypt(master_key, split(line, ':')[1], split(line, ':')[0])); 
+                std::string counter = split(line, ':')[0];
+                getline(crypt_read, line);
+                std::string username = hex_to_utf8(counter_mode_decrypt(master_key, split(line, ':')[1], split(line, ':')[0]));
+                getline(crypt_read, line);
+                std::string password = hex_to_utf8(counter_mode_decrypt(master_key, split(line, ':')[1], split(line, ':')[0]));
+                entries.push_back(new Entry(counter, app_name, username, password));
+            }
+        }
+
+        std::vector<Element> entries_Elements;
+        for (Entry* e : entries) {
+            entries_Elements.push_back(
+                vbox({
+                    text(e->get_app_name()),
+                    text(e->get_username()),
+                    text(e->get_password()),         
+                }) | border
+            );
+        }
+        return vbox(entries_Elements) | border;
     });
     
     Component dashboard_tree = Container::Vertical({
@@ -130,6 +176,7 @@ int main() {
         new_username_input,
         new_password_input,        
         entry_submit,
+        entries_display,
     });
 
     Component dashboard_renderer = Renderer(dashboard_tree, [&]{
@@ -147,9 +194,7 @@ int main() {
                 }),
                 entry_submit->Render(), 
             }) | border,
-            vbox({
-                text("jamming with the hamming"),
-            }) | border,
+            entries_display->Render(),    
         }) | border;
     });
     
@@ -161,6 +206,25 @@ int main() {
     
     main_container |= CatchEvent([&](Event event) {
         if (event == Event::CtrlD) {
+            crypt_read.clear();
+            crypt_read.seekg(0, std::ios::beg);
+            std::string first_line;
+            getline(crypt_read, first_line);
+            crypt_write.open("/home/caleb/documents/crypt", std::ios::trunc);
+            crypt_write << first_line << '\n';
+            for (auto &e : entries) {
+                std::string cur_counter = e->get_counter();
+                crypt_write << cur_counter << ':' << counter_mode_encrypt(master_key, utf8_to_hex(e->get_app_name()), cur_counter) << '\n';
+                for (int i = 0; i < ceil(e->get_app_name().size()/16.0); i++) {
+                    cur_counter = increment_hex_string(cur_counter);
+                }
+                crypt_write << cur_counter << ':' << counter_mode_encrypt(master_key, utf8_to_hex(e->get_username()), cur_counter) << '\n';
+                for (int i = 0; i < ceil(e->get_username().size()/16.0); i++) {
+                    cur_counter = increment_hex_string(cur_counter);
+                }
+                crypt_write << cur_counter << ':' << counter_mode_encrypt(master_key, utf8_to_hex(e->get_password()), cur_counter) << '\n';
+            }
+            crypt_write.close();
             screen.Exit();
             return true;
         }
@@ -168,7 +232,7 @@ int main() {
     });
  
     screen.Loop(main_container);
-    crypt.close();
+    crypt_read.close();
     std::system("clear");
     std::system("tmux clear-history");
     return 0;
