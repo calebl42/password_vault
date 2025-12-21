@@ -47,7 +47,21 @@ int main() {
     using namespace ftxui;
     auto screen = ScreenInteractive::TerminalOutput();
     std::vector<Entry*> entries;
+    Component entries_container = Container::Vertical({}); 
     bool entries_fetched = false;
+    auto refresh_entries = [&] {
+        entries_container->DetachAllChildren();
+        for (auto& e : entries) {
+            entries_container->Add(Button("delete", [&] {
+                for (unsigned long i = 0; i < entries.size(); i++) {
+                    if (entries[i]->get_counter() == e->get_counter()) {
+                        entries.erase(entries.begin() + i);
+                        break; 
+                    }
+                }             
+            })); 
+        }       
+    };
 
     std::ofstream crypt_write("/home/caleb/documents/crypt", std::ios::app);
     crypt_write.close(); 
@@ -88,6 +102,7 @@ int main() {
             selector = 2;
         } else {
             attempt_failed = true;
+            login_attempt.clear();
         }
     };
     Component login_input = Input(&login_attempt, login_option);
@@ -135,12 +150,13 @@ int main() {
         }
 
         entries.push_back(new Entry(latest_counter, new_app, new_username, new_password)); 
+        refresh_entries();
         new_app.clear();
         new_username.clear();
         new_password.clear();        
     });
-    
-    Component entries_display = Renderer([&] {
+ 
+    Component entries_display = Renderer(entries_container, [&] {
         if (!entries_fetched) {
             entries_fetched = true; 
             crypt_read.clear();
@@ -156,19 +172,23 @@ int main() {
                 std::string password = hex_to_utf8(counter_mode_decrypt(master_key, split(line, ':')[1], split(line, ':')[0]));
                 entries.push_back(new Entry(counter, app_name, username, password));
             }
+            refresh_entries();
         }
 
         std::vector<Element> entries_Elements;
-        for (Entry* e : entries) {
+        for (unsigned long i = 0; i < entries.size(); i++) {
             entries_Elements.push_back(
-                vbox({
-                    text(e->get_app_name()),
-                    text(e->get_username()),
-                    text(e->get_password()),         
+                hbox({
+                    vbox({
+                        text("app name: " + entries[i]->get_app_name()),
+                        text("username: " + entries[i]->get_username()),
+                        text("password: " + entries[i]->get_password()),         
+                    }),
+                    entries_container->ChildAt(i)->Render(),
                 }) | border
             );
         }
-        return vbox(entries_Elements) | border;
+        return vbox(entries_Elements);
     });
     
     Component dashboard_tree = Container::Vertical({
